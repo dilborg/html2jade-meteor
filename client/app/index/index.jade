@@ -1,0 +1,17 @@
+head
+  title HTML2Jade Meteor Edition
+body
+  +index
+
+template(name='index')
+  .container
+    .row
+      .col-md-12
+        h1.text-center HTML2Jade converter: Meteor Edition
+    .row
+      .col-md-6
+        h4 HTML
+        textarea#input-html
+      .col-md-6
+        h4 Jade
+        textarea#input-jade
