@@ -24,10 +24,9 @@ Template.index.events({
 
   'keypress .CodeMirror, focus .CodeMirror, blur .CodeMirror, change .CodeMirror, paste .CodeMirror, keyup .CodeMirror': function(e, t) {
     Meteor.setTimeout(function() {
-      JadeEditor.setValue(HtmlEditor.getValue());
+      Meteor.call('convertHtml', HtmlEditor.getValue(), function(err, jade) {
+        JadeEditor.setValue(jade);
+      });
     }, 500);
-    /*Html2Jade.convertDocument($('#input-html').value(), {}, function (err, jade) {
-      $('#input-jade').value(jade);
-    });*/
   }
 });
