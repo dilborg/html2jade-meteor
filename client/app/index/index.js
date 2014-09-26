@@ -14,7 +14,7 @@ Template.index.rendered = function() {
   JadeEditor = CodeMirror.fromTextArea(document.getElementById('input-jade'), {
     theme: 'base16-light',
     mode: {
-      name: "jade",
+      name: 'jade',
       alignCDATA: true
     }
   });
@@ -22,7 +22,7 @@ Template.index.rendered = function() {
 
 Template.index.events({
 
-  'keypress .CodeMirror, focus .CodeMirror, blur .CodeMirror, change .CodeMirror, paste .CodeMirror, keyup .CodeMirror': function(e, t) {
+  'keypress #div-html .CodeMirror, focus #div-html .CodeMirror, blur #div-html .CodeMirror, change #div-html .CodeMirror, paste #div-html .CodeMirror, keyup #div-html .CodeMirror': function(e, t) {
     Meteor.setTimeout(function() {
       Meteor.call('convertHtml', HtmlEditor.getValue(), function(err, jade) {
         JadeEditor.setValue(jade);
