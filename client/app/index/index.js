@@ -22,7 +22,7 @@ Template.index.rendered = function() {
 
 Template.index.events({
 
-  'keypress #div-html .CodeMirror, focus #div-html .CodeMirror, blur #div-html .CodeMirror, change #div-html .CodeMirror, paste #div-html .CodeMirror, keyup #div-html .CodeMirror': function(e, t) {
+  'paste #div-html .CodeMirror, keyup #div-html .CodeMirror': function(e, t) {
     Meteor.setTimeout(function() {
       Meteor.call('convertHtml', HtmlEditor.getValue(), function(err, jade) {
         JadeEditor.setValue(jade);

@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "html": {
+      "version": "0.0.7"
+    },
     "html2jade": {
       "version": "0.7.8",
       "dependencies": {
