@@ -25,28 +25,48 @@ var preProcessHtml = function(html) {
   //html = htmlpretty.prettyPrint(html);
 
   // Process templates
-  html = html.replace(/{{> (.*)}}/g, '<meteor-' + u + '>$1</meteor-' + u + '>')
+  html = html.replace(/{{> (.*?)}}/g, '<meteor-' + u + '>$1</meteor-' + u + '>')
 
   // Process statements
-  html = html.replace(/{{#if (.*)}}/g, '<meteor-if-' + u + ' data="$1">');
-  html = html.replace(/{{#unless (.*)}}/g, '<meteor-unless-' + u + ' data="$1">');
-  html = html.replace(/{{#each (.*)}}/g, '<meteor-each-' + u + ' data="$1">');
-  html = html.replace(/{{#with (.*)}}/g, '<meteor-with-' + u + ' data="$1">');
+  html = html.replace(/{{#if (.*?)}}/g, '<meteor-if-' + u + ' data="$1">');
+  html = html.replace(/{{#unless (.*?)}}/g, '<meteor-unless-' + u + ' data="$1">');
+  html = html.replace(/{{#each (.*?)}}/g, '<meteor-each-' + u + ' data="$1">');
+  html = html.replace(/{{#with (.*?)}}/g, '<meteor-with-' + u + ' data="$1">');
   html = html.replace(/{{#block}}/g, '<meteor-block-' + u + '>');
-  html = html.replace(/{{else}}/g, '<meteor-else-' + u + '/></meteor-else-' + u + '>');
+  html = html.replace(/{{else}}/g, '<meteor-else-' + u + '></meteor-else-' + u + '>');
   html = html.replace(/{{\/if}}/g, '</meteor-if-' + u + '>')
   html = html.replace(/{{\/unless}}/g, '</meteor-unless-' + u + '>')
   html = html.replace(/{{\/each}}/g, '</meteor-each-' + u + '>');
   html = html.replace(/{{\/with}}/g, '</meteor-with-' + u + '>');
   html = html.replace(/{{\/block}}/g, '</meteor-block-' + u + '>');
 
-  // Process variables
-  var class_match = /(class=["'](.*)["']).*?>/g;
+  // Process hanging variables
+  var hang_match = /<(.*?)>/g;
+  while (match = hang_match.exec(html)) {
+    var mstring = match[1];
+    var var_match = / ({{.*?}})/g;
+    while (matched_var = var_match.exec(match[1])) {
+      c = matched_var[1];
+      mstring = mstring.replace(c, '');
+      if (mstring.match('dyn-' + u)) {
+        mstring = mstring.replace(new RegExp('dyn-' + u + '="(.*?)"'), 'dyn-' + u + '="$1 ' + c + '"');
+      } else {
+        mstring = mstring + ' dyn-' + u + '="' + c + '"';
+      }
+    }
+    if (mstring != match[0]) {
+      mstring = mstring.replace(/{{|}}/g, '');
+      html = html.replace(match[1], mstring);
+    }
+  }
+
+  // Process class variables
+  var class_match = /(class="(.*?)").*?>/g;
   while (match = class_match.exec(html)) {
     var mstring = match[1];
-    var var_match = /(?:.*?({{.*?}}).*?)/g;
+    var var_match = /([^ ]*?{{.*?}})/g;
     while (matched_var = var_match.exec(match[2])) {
-      c = matched_var[1];
+      c = matched_var[0];
       mstring = mstring.replace(c, '');
       if (mstring.match('class-' + u)) {
         mstring = mstring.replace(new RegExp('class-' + u + '="(.*?)"'), 'class-' + u + '="$1 ' + c + '"');
@@ -74,8 +94,12 @@ var postProcessJade = function(jade) {
   jade = jade.replace(new RegExp('  meteor-else-' + u, 'g'), 'else');
   jade = jade.replace(new RegExp('meteor-block-' + u, 'g'), 'block');
 
-  // Process variables
+  // Process hanging variables
+  jade = jade.replace(new RegExp('dyn-' + u + '=\'(.*?)\'', 'g'), '$dyn=$1');
+
+  // Process class variables
   jade = jade.replace(new RegExp('class-' + u + '="(.*?)"', 'g'), 'class="$1"');
+  jade = jade.replace(new RegExp('class-' + u + '=\'(.*?)\'', 'g'), 'class="$1"');
 
   // Remove <html> tag: Meteor doesn't like it in templates
   jade = jade.split("\n").slice(1).join("\n");
