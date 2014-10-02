@@ -1,5 +1,4 @@
 var html2jade = Meteor.npmRequire('html2jade');
-var htmlpretty = Meteor.npmRequire('html');
 
 var u = Random.id().toLowerCase();
 
@@ -19,19 +18,15 @@ Meteor.methods({
 });
 
 var preProcessHtml = function(html) {
-  // FIXME: gives strange results
-  // Lint source HTML
-  //html = html.replace(/\n/g, '').replace(/  */g, ' ');
-  //html = htmlpretty.prettyPrint(html);
 
   // Process templates
-  html = html.replace(/{{> (.*?)}}/g, '<meteor-' + u + '>$1</meteor-' + u + '>')
+  html = html.replace(/{{> (.*?)}}/g, '<meteor-template-' + u + ' data=\'$1\'></meteor-template-' + u + '>')
 
   // Process statements
-  html = html.replace(/{{#if (.*?)}}/g, '<meteor-if-' + u + ' data="$1">');
-  html = html.replace(/{{#unless (.*?)}}/g, '<meteor-unless-' + u + ' data="$1">');
-  html = html.replace(/{{#each (.*?)}}/g, '<meteor-each-' + u + ' data="$1">');
-  html = html.replace(/{{#with (.*?)}}/g, '<meteor-with-' + u + ' data="$1">');
+  html = html.replace(/{{#if (.*?)}}/g, '<meteor-if-' + u + ' data=\'$1\'>');
+  html = html.replace(/{{#unless (.*?)}}/g, '<meteor-unless-' + u + ' data=\'$1\'>');
+  html = html.replace(/{{#each (.*?)}}/g, '<meteor-each-' + u + ' data=\'$1\'>');
+  html = html.replace(/{{#with (.*?)}}/g, '<meteor-with-' + u + ' data=\'$1\'>');
   html = html.replace(/{{#block}}/g, '<meteor-block-' + u + '>');
   html = html.replace(/{{else}}/g, '<meteor-else-' + u + '></meteor-else-' + u + '>');
   html = html.replace(/{{\/if}}/g, '</meteor-if-' + u + '>')
@@ -40,42 +35,59 @@ var preProcessHtml = function(html) {
   html = html.replace(/{{\/with}}/g, '</meteor-with-' + u + '>');
   html = html.replace(/{{\/block}}/g, '</meteor-block-' + u + '>');
 
-  // Process hanging variables
-  var hang_match = /<(.*?)>/g;
-  while (match = hang_match.exec(html)) {
-    var mstring = match[1];
-    var var_match = / ({{.*?}})/g;
-    while (matched_var = var_match.exec(match[1])) {
-      c = matched_var[1];
-      mstring = mstring.replace(c, '');
-      if (mstring.match('dyn-' + u)) {
-        mstring = mstring.replace(new RegExp('dyn-' + u + '="(.*?)"'), 'dyn-' + u + '="$1 ' + c + '"');
-      } else {
-        mstring = mstring + ' dyn-' + u + '="' + c + '"';
-      }
-    }
-    if (mstring != match[0]) {
-      mstring = mstring.replace(/{{|}}/g, '');
-      html = html.replace(match[1], mstring);
-    }
-  }
+  // Process tags
+  var tag_match  = /<[^>]*?( .*?)>/g;
+  var attr_match = /(\w+)="(.*?)"/g;
+  var var_match  = /([^ ]*?{{.*?}})/g;
+  var svar_match = / ({{.*?}})/g;
 
-  // Process class variables
-  var class_match = /(class="(.*?)").*?>/g;
-  while (match = class_match.exec(html)) {
-    var mstring = match[1];
-    var var_match = /([^ ]*?{{.*?}})/g;
-    while (matched_var = var_match.exec(match[2])) {
-      c = matched_var[0];
-      mstring = mstring.replace(c, '');
-      if (mstring.match('class-' + u)) {
-        mstring = mstring.replace(new RegExp('class-' + u + '="(.*?)"'), 'class-' + u + '="$1 ' + c + '"');
-      } else {
-        mstring = mstring + ' class-' + u + '="' + c + '"';
+  while (t_match = tag_match.exec(html)) {
+    var tag = t_match[1];
+    var new_tag = tag;
+
+    // Process data attributes (attr="value")
+    var meteor_attr = {};
+    while (a_match = attr_match.exec(tag)) {
+      var attr = a_match[1];
+
+      // Skip all other attributes
+      if (attr !== 'class' && attr !== 'id') {
+        continue;
+      }
+
+      var data = a_match[2];
+      while (v_match = var_match.exec(data)) {
+        var variable = v_match[1];
+
+        // Remove Meteor var from tag
+        new_tag = new_tag.replace(variable, '');
+
+        // Fill Meteor-specific attr/values
+        meteor_attr[attr] = (meteor_attr[attr] === undefined ? '' : meteor_attr[attr] + ' ') + variable;
       }
     }
-    if (mstring != match[0]) {
-      html = html.replace(match[1], mstring);
+
+    // Process single attribute (attr)
+    // As of now, Meteor's JADE allows just a single $dyn attribute
+    sv_match = new_tag.match(svar_match);
+    if (sv_match) {
+      var svariable = sv_match[0].trim();
+
+      // Remove Meteor var from tag
+      new_tag = new_tag.replace(svariable, '');
+
+      // Add dyn attribute
+      new_tag = new_tag + ' ' + 'mdyn-' + u + '="' + svariable.replace(/{{|}}/g, '') + '"';
+    }
+
+    // Populate tag with properly wrapped Meteor vars
+    _.each(meteor_attr, function(v, k) {
+      new_tag = new_tag + ' ' + 'mdata-' + k + '-' + u + '="' + v + '"';
+    });
+
+    // Replace old tag with the new one
+    if (new_tag != tag) {
+      html = html.replace(tag, new_tag);
     }
   }
 
@@ -84,7 +96,7 @@ var preProcessHtml = function(html) {
 
 var postProcessJade = function(jade) {
   // Process templates
-  jade = jade.replace(new RegExp('meteor-' + u + ' (.*)', 'g'), '+$1');
+  jade = jade.replace(new RegExp('meteor-template-' + u + '\\(data=\'(.*?)\'\\)', 'g'), '+$1');
 
   // Process statements
   jade = jade.replace(new RegExp('meteor-if-' + u + '\\(data=\'(.*?)\'\\)', 'g'), 'if $1');
@@ -94,12 +106,12 @@ var postProcessJade = function(jade) {
   jade = jade.replace(new RegExp('  meteor-else-' + u, 'g'), 'else');
   jade = jade.replace(new RegExp('meteor-block-' + u, 'g'), 'block');
 
-  // Process hanging variables
-  jade = jade.replace(new RegExp('dyn-' + u + '=\'(.*?)\'', 'g'), '$dyn=$1');
+  // Process tag variables
+  jade = jade.replace(new RegExp('mdata-(\\w+)-' + u + '="(.*?)"', 'g'), '$1="$2"');
+  jade = jade.replace(new RegExp('mdata-(\\w+)-' + u + '=\'(.*?)\'', 'g'), '$1="$2"');
 
-  // Process class variables
-  jade = jade.replace(new RegExp('class-' + u + '="(.*?)"', 'g'), 'class="$1"');
-  jade = jade.replace(new RegExp('class-' + u + '=\'(.*?)\'', 'g'), 'class="$1"');
+  // Process dynamic attributes
+  jade = jade.replace(new RegExp('mdyn-' + u + '=\'(.*?)\'', 'g'), '$dyn=$1');
 
   // Remove <html> tag: Meteor doesn't like it in templates
   jade = jade.split("\n").slice(1).join("\n");

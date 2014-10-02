@@ -1,5 +1,13 @@
 // Index controller
 
+Template.index.test = function() {
+  return 'disabled';
+};
+
+Template.index.test2 = function() {
+  return 'lalala';
+};
+
 Template.index.rendered = function() {
   HtmlEditor = CodeMirror.fromTextArea(document.getElementById('input-html'), {
     theme: 'base16-light',
