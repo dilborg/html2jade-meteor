@@ -1,0 +1,132 @@
+head
+  title All Tomorrow&apos;s Parties
+  meta(name='viewport' content='width=device-width, initial-scale=1.0')
+body
+  +page
+template(name='page')
+  if showCreateDialog
+    +createDialog
+  if showInviteDialog
+    +inviteDialog
+  .container
+    .row
+      .span1
+      .span10
+        .header.row
+          .span5
+            h3(style='margin-bottom: 0px') All Tomorrow&apos;s Parties
+          .span5
+            div(style='float: right')
+              +loginButtons align="right"
+        .row
+          .span6
+            +map
+            if currentUser
+              .pagination-centered
+                em
+                  small Double click the map to post a party!
+          .span4
+            +details
+      .span1
+template(name='map')
+  .map
+    svg(width='500' height='500')
+      circle.callout(cx='-100' cy='-100')
+      g.circles
+      g.labels
+    div
+      small.attribution.muted
+        | &copy;
+        a(href='http://www.openstreetmap.org/?lat=37.78212&lon=-122.40146&zoom=15&layers=M' target='_blank') OpenStreetMap
+        |  contributors
+template(name='details')
+  .details
+    if party
+      with party
+        h1 {{title}}
+        .description {{description}}
+        +attendance
+        .rsvp-buttons
+          if currentUser
+            input.btn.btn-small.rsvp_yes(type='button' value="I'm going!" class="{{maybeChosen 'yes'}}")
+            input.btn.btn-small.rsvp_maybe(type='button' value='Maybe' class="{{maybeChosen 'maybe'}}")
+            input.btn.btn-small.rsvp_no(type='button' value='No' class="{{maybeChosen 'no'}}")
+          else
+            i Sign in to RSVP for this party.
+          p
+            small Posted by {{creatorName}}
+        if canRemove
+          .alert.alert-info
+            small
+              | You posted this party and nobody is signed up to go, so if
+              | you like, you could
+              b
+                a.remove(href='#') delete this listing
+              | .
+    else
+      h1.muted.pagination-centered
+        if anyParties
+          | Click a party to select it
+        else
+          |           Sign in and double click the map to post a party
+template(name='attendance')
+  .attendance.well.well-small
+    .muted.who
+      b Who
+    if public
+      div
+        b Everyone
+        span.label.label-inverse.pull-right Invited
+    each rsvps
+      div
+        | {{rsvpName}}
+        if rsvpIs "yes"
+          span.label.label-success.pull-right Going
+        if rsvpIs "maybe"
+          span.label.label-info.pull-right Maybe
+        if rsvpIs "no"
+          span.label.label.pull-right No
+    unless public
+      each outstandingInvitations
+        div
+          | {{invitationName}}
+          span.label.label-inverse.pull-right Invited
+    if nobody
+      div Nobody.
+    if canInvite
+      .invite
+        a.btn.btn-mini.invite(href='#') Invite people
+template(name='createDialog')
+  .mask
+  .modal
+    .modal-header
+      button.close.cancel(type='button') &times;
+      h3 Add party
+    .modal-body
+      if error
+        .alert.alert-error {{error}}
+      label Title
+      input.title.span5(type='text')
+      label Description
+      textarea.description.span5
+      label.checkbox
+        input.private(type='checkbox')
+        |         Private party &mdash; invitees only
+    .modal-footer
+      a.btn.cancel(href='#') Cancel
+      a.btn.btn-primary.save(href='#') Add party
+template(name='inviteDialog')
+  .mask
+  .modal
+    .modal-header
+      button.close.done(type='button') &times;
+      h3 Invite people
+    .modal-body
+      each uninvited
+        .invite-row
+          a.btn.invite(href='#') Invite
+          |           {{displayName}}
+      else
+        |         Everyone on the site has already been invited.
+    .modal-footer
+      a.btn.btn-primary.done(href='#') Done

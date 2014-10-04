@@ -1,0 +1,65 @@
+head
+  title Todos
+body
+  #top-tag-filter
+    +tag_filter
+  #main-pane
+    +todos
+  #side-pane
+    +lists
+template(name='lists')
+  h3 Todo Lists
+  if loading
+    #lists Loading...
+  else
+    #lists
+      each lists
+        .list(class="{{selected}}")
+          if editing
+            .edit
+              input#list-name-input.list-name-input(type='text' value='{{name}}')
+          else
+            .display
+              a.list-name(href='/{{_id}}' class="{{name_class}}")
+                | {{name}}
+    #createList
+      input#new-list(type='text' placeholder='New list')
+template(name='todos')
+  if any_list_selected
+    #items-view
+      if loading
+        | Loading...
+      else
+        #new-todo-box
+          input#new-todo(type='text' placeholder='New item')
+        ul#item-list
+          each todos
+            +todo_item
+template(name='todo_item')
+  li.todo(class="{{done_class}}")
+    if editing
+      .edit
+        input#todo-input(type='text' value='{{text}}')
+    else
+      .destroy
+      .display
+        input.check(name='markdone' type='checkbox' checked='{{done}}')
+        .todo-text {{text}}
+    .item-tags
+      each tag_objs
+        .tag.removable_tag
+          .name {{tag}}
+          .remove
+      if adding_tag
+        .tag.edittag
+          input#edittag-input(type='text' value='')
+      else
+        .tag.addtag
+          | +tag
+template(name='tag_filter')
+  #tag-filter.tag-list
+    .label Show:
+    each tags
+      .tag(class="{{selected}}")
+        | {{tag_text}}
+        span.count ({{count}})

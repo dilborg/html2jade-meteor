@@ -1,0 +1,87 @@
+head
+  title Word play!
+body
+  +page
+template(name='page')
+  #main
+    #left
+      +board
+    #right
+      +lobby
+      +scratchpad
+      +postgame
+      +scores
+template(name='board')
+  #clock
+    | {{ clock }}
+  #board
+    div
+      .square(class="{{ selected 0 }}") {{ square 0 }}
+      .square(class="{{ selected 1 }}") {{ square 1 }}
+      .square(class="{{ selected 2 }}") {{ square 2 }}
+      .square(class="{{ selected 3 }}") {{ square 3 }}
+    div
+      .square(class="{{ selected 4 }}") {{ square 4 }}
+      .square(class="{{ selected 5 }}") {{ square 5 }}
+      .square(class="{{ selected 6 }}") {{ square 6 }}
+      .square(class="{{ selected 7 }}") {{ square 7 }}
+    div
+      .square(class="{{ selected 8 }}") {{ square 8 }}
+      .square(class="{{ selected 9 }}") {{ square 9 }}
+      .square(class="{{ selected 10 }}") {{ square 10 }}
+      .square(class="{{ selected 11 }}") {{ square 11 }}
+    div
+      .square(class="{{ selected 12 }}") {{ square 12 }}
+      .square(class="{{ selected 13 }}") {{ square 13 }}
+      .square(class="{{ selected 14 }}") {{ square 14 }}
+      .square(class="{{ selected 15 }}") {{ square 15 }}
+template(name='lobby')
+  div
+    if show
+      #lobby
+        h1 What&apos;s your name?
+        input#myname(type='text')
+        if count
+          h1 {{count}} other players are in the lobby:
+          each waiting
+            .player {{name}}
+        div
+          button#startgame.startgame($dyn=disabled)
+            if count
+              | It&apos;s on!
+            else
+              |  Play solo
+template(name='scratchpad')
+  if show
+    #scratchpad
+      input#scratchpad_input(type='text')
+      button.submit(name='submit') Submit
+template(name='postgame')
+  div
+    if show
+      #postgame
+        button.lobby(name='backtolobby') Back to lobby
+template(name='scores')
+  div
+    if show
+      #scores
+        each players
+          +player
+template(name='player')
+  .player
+    .header(class="{{winner}}")
+      if name
+        | {{name}}
+      else
+        span.unnamed no name
+      span.score {{total_score}}
+      if winner
+        span.winner_text Winner!
+    +words
+template(name='words')
+  .words
+    each words
+      .word(id="word_{{_id}}" class="{{state}}")
+        span.score
+          | {{score}}
+        |       {{word}}

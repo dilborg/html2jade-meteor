@@ -106,6 +106,9 @@ var postProcessJade = function(jade) {
   jade = jade.split('\n').slice(1).join('\n');
   jade = jade.replace(/^  /gm, '');
 
+  // Remove hanging spaces
+  jade = jade.replace(/ *$/gm, '');
+
   return jade;
 };
 

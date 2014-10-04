@@ -2,10 +2,7 @@
 
 module.exports = function(grunt) {
 
-  // Load grunt tasks automatically
   require('load-grunt-tasks')(grunt);
-
-  // Time how long tasks take. Can help when optimizing build times
   require('time-grunt')(grunt);
 
   grunt.initConfig({
@@ -32,17 +29,30 @@ module.exports = function(grunt) {
       }
     },
 
-    // Empties folders to start fresh
-    clean: {
-      public: 'public'
+    casper: {
+      options: {
+        test : true,
+        engine: 'slimerjs',
+        'fail-fast': true,
+        concise: true
+      },
+      e2e: {
+        src: ['tests/e2e.js']
+      }
     },
 
     shell: {
       run_dev: {
         command: 'cd meteor && meteor'
       },
+      bundle_prod: {
+        command: 'cd meteor && meteor build --directory ..'
+      },
+      install_npm: {
+        command: 'cd bundle/programs/server && npm install'
+      },
       run_prod: {
-        command: 'meteor build project'
+        command: 'cd bundle && node main.js'
       }
     }
 
@@ -53,26 +63,18 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('serve:prod', [
-    'clean:public',
-    'build',
+    'shell:bundle_prod',
+    'shell:install_npm',
     'shell:run_prod'
   ]);
 
   grunt.registerTask('test', [
-    'jshint:tests',
     'jshint:meteor',
-//    'test:laika'
-  ]);
-
-  grunt.registerTask('build', [
-//    'meteor:build',
-//    'meteor:deploy'
+    'jshint:tests',
+    'casper:e2e'
   ]);
 
   grunt.registerTask('default', [
-    'test',
-    'build',
     'serve:dev'
   ]);
-
 };

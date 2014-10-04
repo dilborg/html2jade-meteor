@@ -1,7 +1,8 @@
 # HTML2Jade: Meteor Edition
 
 Converts your Meteor [Spacebar-enabled](https://github.com/meteor/meteor/blob/devel/packages/spacebars/README.md) HTML to [Jade](https://github.com/mquandalle/meteor-jade) with ease.
-Unlike any other tools available out there, it works with default Meteor examples out-of-the-box.
+
+Unlike any other tools available out there, it works with [default Meteor examples](https://github.com/meteor/meteor/tree/devel/examples) out-of-the-box.
 
 ## Prerequisites
 
@@ -23,4 +24,4 @@ This project would not be possible without a great tool called [html2jade](https
 
 This software is released under the [MIT License](http://opensource.org/licenses/MIT).
 
-- Copyright (c) 2014 [Vincent Stark](http://vstark.net)
+Copyright (c) 2014 [Vincent Stark](http://vstark.net)
