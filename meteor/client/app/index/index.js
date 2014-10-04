@@ -1,12 +1,6 @@
-// Index controller
+'use strict';
 
-Template.index.test = function() {
-  return 'disabled';
-};
-
-Template.index.test2 = function() {
-  return 'lalala';
-};
+var HtmlEditor, JadeEditor;
 
 Template.index.rendered = function() {
   HtmlEditor = CodeMirror.fromTextArea(document.getElementById('input-html'), {
@@ -30,7 +24,7 @@ Template.index.rendered = function() {
 
 Template.index.events({
 
-  'paste #div-html .CodeMirror, keyup #div-html .CodeMirror': function(e, t) {
+  'paste #div-html .CodeMirror, keyup #div-html .CodeMirror': function() {
     Meteor.setTimeout(function() {
       Meteor.call('convertHtml', HtmlEditor.getValue(), function(err, jade) {
         JadeEditor.setValue(jade);

@@ -1,26 +1,12 @@
+'use strict';
+
 var html2jade = Meteor.npmRequire('html2jade');
-
 var u = Random.id().toLowerCase();
-
-Meteor.methods({
-
-  convertHtml: function(html) {
-    if (html == '') return '';
-    html = preProcessHtml(html);
-    var promise = Async.runSync(function(done) {
-      html2jade.convertHtml(html, { scalate: true }, function(err, jade) {
-        jade = postProcessJade(jade);
-        done(err, jade);
-      });
-    });
-    return promise.result;
-  }
-});
 
 var preProcessHtml = function(html) {
 
   // Process templates
-  html = html.replace(/{{> (.*?)}}/g, '<meteor-template-' + u + ' data=\'$1\'></meteor-template-' + u + '>')
+  html = html.replace(/{{> (.*?)}}/g, '<meteor-template-' + u + ' data=\'$1\'></meteor-template-' + u + '>');
 
   // Process statements
   html = html.replace(/{{#if (.*?)}}/g, '<meteor-if-' + u + ' data=\'$1\'>');
@@ -29,25 +15,26 @@ var preProcessHtml = function(html) {
   html = html.replace(/{{#with (.*?)}}/g, '<meteor-with-' + u + ' data=\'$1\'>');
   html = html.replace(/{{#block}}/g, '<meteor-block-' + u + '>');
   html = html.replace(/{{else}}/g, '<meteor-else-' + u + '></meteor-else-' + u + '>');
-  html = html.replace(/{{\/if}}/g, '</meteor-if-' + u + '>')
-  html = html.replace(/{{\/unless}}/g, '</meteor-unless-' + u + '>')
+  html = html.replace(/{{\/if}}/g, '</meteor-if-' + u + '>');
+  html = html.replace(/{{\/unless}}/g, '</meteor-unless-' + u + '>');
   html = html.replace(/{{\/each}}/g, '</meteor-each-' + u + '>');
   html = html.replace(/{{\/with}}/g, '</meteor-with-' + u + '>');
   html = html.replace(/{{\/block}}/g, '</meteor-block-' + u + '>');
 
   // Process tags
+  var t_match, a_match, v_match, sv_match;
   var tag_match  = /<[^>]*?( .*?)>/g;
   var attr_match = /(\w+)="(.*?)"/g;
   var var_match  = /([^ ]*?{{.*?}})/g;
   var svar_match = / ({{.*?}})/g;
 
-  while (t_match = tag_match.exec(html)) {
+  while ((t_match = tag_match.exec(html))) {
     var tag = t_match[1];
     var new_tag = tag;
 
     // Process data attributes (attr="value")
     var meteor_attr = {};
-    while (a_match = attr_match.exec(tag)) {
+    while ((a_match = attr_match.exec(tag))) {
       var attr = a_match[1];
 
       // Skip all other attributes
@@ -56,7 +43,7 @@ var preProcessHtml = function(html) {
       }
 
       var data = a_match[2];
-      while (v_match = var_match.exec(data)) {
+      while ((v_match = var_match.exec(data))) {
         var variable = v_match[1];
 
         // Remove Meteor var from tag
@@ -81,12 +68,14 @@ var preProcessHtml = function(html) {
     }
 
     // Populate tag with properly wrapped Meteor vars
+    /* jshint loopfunc: true */
     _.each(meteor_attr, function(v, k) {
       new_tag = new_tag + ' ' + 'mdata-' + k + '-' + u + '="' + v + '"';
     });
+    /* jshint loopfunc: false */
 
     // Replace old tag with the new one
-    if (new_tag != tag) {
+    if (new_tag !== tag) {
       html = html.replace(tag, new_tag);
     }
   }
@@ -114,8 +103,23 @@ var postProcessJade = function(jade) {
   jade = jade.replace(new RegExp('mdyn-' + u + '=\'(.*?)\'', 'g'), '$dyn=$1');
 
   // Remove <html> tag: Meteor doesn't like it in templates
-  jade = jade.split("\n").slice(1).join("\n");
+  jade = jade.split('\n').slice(1).join('\n');
   jade = jade.replace(/^  /gm, '');
 
   return jade;
-}
+};
+
+Meteor.methods({
+
+  convertHtml: function(html) {
+    if (html === '') { return ''; }
+    html = preProcessHtml(html);
+    var promise = Async.runSync(function(done) {
+      html2jade.convertHtml(html, { scalate: true }, function(err, jade) {
+        jade = postProcessJade(jade);
+        done(err, jade);
+      });
+    });
+    return promise.result;
+  }
+});
