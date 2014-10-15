@@ -5,7 +5,14 @@ var url = 'http://localhost:3000';
 
 var testConversion = function(html, jade, name) {
   casper.test.comment(name);
-  casper.sendKeys('#div-html .CodeMirror textarea', html, { reset: true });
+
+  casper.evaluate(function(html) {
+    window.HtmlEditor.setValue(html);
+  }, html);
+
+  // Refresh Jade window
+  casper.sendKeys('#div-html .CodeMirror textarea', ' ');
+
   casper.waitForSelectorTextChange('#div-jade .CodeMirror-code pre', function() {
     casper.test.assertEvalEquals(function() {
       return window.JadeEditor.getValue();
@@ -15,6 +22,7 @@ var testConversion = function(html, jade, name) {
 
 var testFileConversion = function(html_file, jade_file, name) {
   casper.test.comment(name);
+
   var html = fs.readFileSync(html_file);
   var jade = fs.readFileSync(jade_file);
 
@@ -32,7 +40,7 @@ var testFileConversion = function(html_file, jade_file, name) {
   });
 };
 
-casper.test.begin('Running E2E Tests', 6, function(test){
+casper.test.begin('Running E2E Tests', 7, function(test){
 
   casper.start(url, function() {
     casper.viewport(1280, 720).then(function() {
@@ -51,6 +59,14 @@ casper.test.begin('Running E2E Tests', 6, function(test){
     casper.waitForSelector('#div-jade .CodeMirror-scroll', function() {
       this.test.comment('CodeMirror is attached to Jade textarea');
     });
+  });
+
+  casper.then(function() {
+    this.test.comment('Example is displayed correctly');
+    var jade = fs.readFileSync('tests/fixtures/example.jade');
+    casper.test.assertEvalEquals(function() {
+      return window.JadeEditor.getValue();
+    }, jade);
   });
 
   casper.then(function() {

@@ -1,6 +1,8 @@
 'use strict';
 
 var html2jade = Meteor.npmRequire('html2jade');
+var fs = Meteor.npmRequire('fs');
+
 var u = Random.id().toLowerCase();
 
 var preProcessHtml = function(html) {
@@ -124,5 +126,9 @@ Meteor.methods({
       });
     });
     return promise.result;
+  },
+
+  getExample: function() {
+    return fs.readFileSync('../web.browser/app/example.html', 'utf-8');
   }
 });
