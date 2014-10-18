@@ -40,7 +40,7 @@ var testFileConversion = function(html_file, jade_file, name) {
   });
 };
 
-casper.test.begin('Running E2E Tests', 7, function(test){
+casper.test.begin('Running E2E Tests', 10, function(test){
 
   casper.start(url, function() {
     casper.viewport(1280, 720).then(function() {
@@ -71,6 +71,18 @@ casper.test.begin('Running E2E Tests', 7, function(test){
 
   casper.then(function() {
     testConversion('test', 'body test\n', 'Simple HTML');
+  });
+
+  casper.then(function() {
+    testConversion('<!-- html comment -->', 'body\n  // html comment\n', 'HTML comment');
+  });
+
+  casper.then(function() {
+    testConversion('{{! spacebars comment }}', 'body\n  //- spacebars comment\n', 'Spacebars comment');
+  });
+
+  casper.then(function() {
+    testConversion('{{!-- spacebars\n block\n comment --}}', 'body\n  //-\n    spacebars\n    block\n    comment\n', 'Spacebars block comment');
   });
 
   casper.then(function() {

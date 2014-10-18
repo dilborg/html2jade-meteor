@@ -7,6 +7,11 @@ var u = Random.id().toLowerCase();
 
 var preProcessHtml = function(html) {
 
+  // Process comments
+  html = html.replace(/{{! ?(.*)}}/g, '<meteor-comment>$1</meteor-comment>');
+  html = html.replace(/{{!--/g, '<meteor-comment>');
+  html = html.replace(/--}}/g, '</meteor-comment>');
+
   // Process templates
   html = html.replace(/{{> (.*?)}}/g, '<meteor-template-' + u + ' data=\'$1\'></meteor-template-' + u + '>');
 
@@ -25,7 +30,7 @@ var preProcessHtml = function(html) {
 
   // Process tags
   var t_match, a_match, v_match, sv_match;
-  var tag_match  = /<[^>]*?( .*?)>/g;
+  var tag_match  = /<[^!][^>]*?( .*?)>/g;
   var attr_match = /(\w+)="(.*?)"/g;
   var var_match  = /([^ ]*?{{.*?}})/g;
   var svar_match = / ({{.*?}})/g;
@@ -86,6 +91,18 @@ var preProcessHtml = function(html) {
 };
 
 var postProcessJade = function(jade) {
+
+  // Process comments
+  var c_match;
+  var comment, new_comment;
+  while ((c_match = jade.match(/meteor-comment\n((?: *\|(?:.*?)\n)+)/))) {
+    comment = c_match[1];
+    new_comment = comment.replace(/(^ +)\| /gm, '$1');
+    jade = jade.replace(comment, new_comment);
+  }
+  jade = jade.replace(/^( *)meteor-comment$/gm, '$1//-');
+  jade = jade.replace(/^( *)meteor-comment (.*)$/gm, '$1//- $2');
+
   // Process templates
   jade = jade.replace(new RegExp('meteor-template-' + u + '\\(data=\'(.*?)\'\\)', 'g'), '+$1');
 
