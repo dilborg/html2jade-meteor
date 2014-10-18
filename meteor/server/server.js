@@ -7,6 +7,10 @@ var u = Random.id().toLowerCase();
 
 var preProcessHtml = function(html) {
 
+  // Process markdown
+  html = html.replace(/{{#markdown}}/g, '<!--\nmeteor-markdown\n');
+  html = html.replace(/{{\/markdown}}/g, '-->');
+
   // Process comments
   html = html.replace(/{{! ?(.*)}}/g, '<meteor-comment>$1</meteor-comment>');
   html = html.replace(/{{!--/g, '<meteor-comment>');
@@ -91,6 +95,16 @@ var preProcessHtml = function(html) {
 };
 
 var postProcessJade = function(jade) {
+
+  // Process markdown
+  var m_match;
+  var markdown, new_markdown;
+  while ((m_match = jade.match(/\/\/\n *meteor-markdown\n((?: *\|(?:.*?)\n)+)/))) {
+    markdown = m_match[1];
+    new_markdown = markdown.replace(/(^ +)\| /gm, '$1');
+    jade = jade.replace(markdown, new_markdown);
+  }
+  jade = jade.replace(/^ *\/\/\n  ( *)meteor-markdown\n/gm, '$1:markdown\n');
 
   // Process comments
   var c_match;
