@@ -5,6 +5,13 @@ var fs = Meteor.npmRequire('fs');
 
 var u = Random.id().toLowerCase();
 
+// Publish current time
+HTTP.methods({
+  'api/time': function() {
+    return 'timeCallback({"dateString":"' + moment.tz(new Date(), 'America/Toronto').format() + '"});';
+  }
+});
+
 var preProcessHtml = function(html) {
 
   // Process markdown
